@@ -2,9 +2,18 @@ var allGitUrlIds = ["git_url_ssh", "git_url_http", "git_url_git"]
 function updateGitUrl(el)
 {
 	guHttpBase = guHttpBase.replace(/\/$/, "")
+	if ( guGitServer.indexOf(':') != -1 ) {
+		guSshPort = guGitServer.slice(guGitServer.indexOf(':'))
+	} else {
+		guSshPort = ''
+	}
 
 	var urls=[]
-	urls["git_url_ssh"]  = [guGitUser + "@" + guGitServer + ":" + guSshURL, guUserIsCommitter]
+	if ( guSshPort == '' ) {
+		urls["git_url_ssh"]  = [guGitUser + "@" + guGitServer + ":" + guSshURL, guUserIsCommitter]
+	} else {
+		urls["git_url_ssh"]  = ["ssh://" + guGitUser + "@" + guGitServer + "/" + guSshURL, guUserIsCommitter]
+	}
 	urls["git_url_http"] = [guHttpProto + "://" + ( (!guProjectIsPublic) || guUserIsCommitter ? guUser + "@" : "") + guHttpBase + "/" + guHttpURL, guUserIsCommitter]
 	urls["git_url_git"]  = ["git://" + guGitServer + "/" + guSshURL, false]
 	var allGitUrlIds = ["git_url_ssh", "git_url_http", "git_url_git"]
