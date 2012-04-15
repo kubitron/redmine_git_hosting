@@ -1,7 +1,15 @@
 class GitHostingSettingsObserver < ActiveRecord::Observer
 	observe :setting
 
-	@@old_valuehash = (Setting.plugin_redmine_git_hosting).clone
+	@@old_valuehash = nil
+
+  def old_valuehash
+    begin
+      @@old_valuehash ||= (Setting.plugin_redmine_git_hosting).clone
+    rescue
+      nil
+    end
+  end
 
 	def reload_this_observer
 		observed_classes.each do |klass|
@@ -21,11 +29,11 @@ class GitHostingSettingsObserver < ActiveRecord::Observer
                 	if !GitHosting.bin_dir_writeable?
                         	# If bin directory not alterable, don't allow changes to
           			# Script directory, Git Username, or Gitolite public or private keys
-                        	valuehash['gitScriptDir'] = @@old_valuehash['gitScriptDir']
-	                	valuehash['gitUser'] = @@old_valuehash['gitUser']
-                  		valuehash['gitoliteIdentityFile'] = @@old_valuehash['gitoliteIdentityFile']
-                  		valuehash['gitoliteIdentityPublicKeyFile'] = @@old_valuehash['gitoliteIdentityPublicKeyFile']
-                        elsif valuehash['gitScriptDir'] && (valuehash['gitScriptDir'] != @@old_valuehash['gitScriptDir'])
+                        	valuehash['gitScriptDir'] = old_valuehash['gitScriptDir']
+	                	valuehash['gitUser'] = old_valuehash['gitUser']
+                  		valuehash['gitoliteIdentityFile'] = old_valuehash['gitoliteIdentityFile']
+                  		valuehash['gitoliteIdentityPublicKeyFile'] = old_valuehash['gitoliteIdentityPublicKeyFile']
+                        elsif valuehash['gitScriptDir'] && (valuehash['gitScriptDir'] != old_valuehash['gitScriptDir'])
 				# Remove old bin directory and scripts, since about to change directory
                         	%x[ rm -rf '#{ GitHosting.get_bin_dir }' ] 
 
@@ -40,15 +48,15 @@ class GitHostingSettingsObserver < ActiveRecord::Observer
                                 else
                                 	valuehash['gitScriptDir'] = normalizedFile + "/"         # Add trailing '/'
                                 end
-	                elsif valuehash['gitUser'] != @@old_valuehash['gitUser'] ||
-                              valuehash['gitoliteIdentityFile'] != @@old_valuehash['gitoliteIdentityFile'] ||
-                              valuehash['gitoliteIdentityPublicKeyFile'] != @@old_valuehash['gitoliteIdentityPublicKeyFile']
+	                elsif valuehash['gitUser'] != old_valuehash['gitUser'] ||
+                              valuehash['gitoliteIdentityFile'] != old_valuehash['gitoliteIdentityFile'] ||
+                              valuehash['gitoliteIdentityPublicKeyFile'] != old_valuehash['gitoliteIdentityPublicKeyFile']
 				# Remove old scripts, since about to change content (leave directory alone)
                         	%x[ rm -f '#{ GitHosting.get_bin_dir }*' ] 
                         end
 
                   	# Temp directory must be absolute and not-empty
-                  	if valuehash['gitTempDataDir'] && (valuehash['gitTempDataDir'] != @@old_valuehash['gitTempDataDir'])
+                  	if valuehash['gitTempDataDir'] && (valuehash['gitTempDataDir'] != old_valuehash['gitTempDataDir'])
                           	# Remove old tmp directory, since about to change
                         	%x[ rm -rf '#{ GitHosting.get_tmp_dir }' ]
 
@@ -66,7 +74,7 @@ class GitHostingSettingsObserver < ActiveRecord::Observer
                   	if valuehash['gitServer']
                         	normalizedServer = valuehash['gitServer'].lstrip.rstrip.split('/').first
                         	if (!normalizedServer.match(/^[a-zA-Z0-9\-]+(\.[a-zA-Z0-9\-]+)*(:\d+)?$/))
-                                	valuehash['gitServer'] = @@old_valuehash['gitServer']
+                                	valuehash['gitServer'] = old_valuehash['gitServer']
                                 else
                                 	valuehash['gitServer'] = normalizedServer
                                 end
@@ -76,7 +84,7 @@ class GitHostingSettingsObserver < ActiveRecord::Observer
                   	if valuehash['httpServer']
                         	normalizedServer = valuehash['httpServer'].lstrip.rstrip.split('/').first
                         	if (!normalizedServer.match(/^[a-zA-Z0-9\-]+(\.[a-zA-Z0-9\-]+)*(:\d+)?$/))
-                                	valuehash['httpServer'] = @@old_valuehash['httpServer']
+                                	valuehash['httpServer'] = old_valuehash['httpServer']
                                 else
                                 	valuehash['httpServer'] = normalizedServer
                                 end
@@ -98,7 +106,7 @@ class GitHostingSettingsObserver < ActiveRecord::Observer
                         	if (normalizedFile != "/")
                         		valuehash['gitRepositoryBasePath'] = normalizedFile[1..-1] + "/"  # Clobber leading '/' add trailing '/'
                         	else
-                        		valuehash['gitRepositoryBasePath'] = @@old_valuehash['gitRepositoryBasePath']
+                        		valuehash['gitRepositoryBasePath'] = old_valuehash['gitRepositoryBasePath']
                                 end
                         end
 
@@ -118,7 +126,7 @@ class GitHostingSettingsObserver < ActiveRecord::Observer
                         	if (normalizedFile != "/")
                         		valuehash['gitRecycleBasePath'] = normalizedFile[1..-1] + "/"  # Clobber leading '/' add trailing '/'
                         	else
-                        		valuehash['gitRecycleBasePath'] = @@old_valuehash['gitRecycleBasePath']
+                        		valuehash['gitRecycleBasePath'] = old_valuehash['gitRecycleBasePath']
                         	end
                         end
                   
@@ -127,7 +135,7 @@ class GitHostingSettingsObserver < ActiveRecord::Observer
                         	if valuehash['gitRecycleExpireTime'].to_f > 0
                                 	valuehash['gitRecycleExpireTime'] = "#{(valuehash['gitRecycleExpireTime'].to_f * 10).to_i / 10.0}"
 	                        else
-                                	valuehash['gitRecycleExpireTime'] = @@old_valuehash['gitRecycleExpireTime']
+                                	valuehash['gitRecycleExpireTime'] = old_valuehash['gitRecycleExpireTime']
                                 end
                         end
 
@@ -136,7 +144,7 @@ class GitHostingSettingsObserver < ActiveRecord::Observer
                         	if valuehash['gitLockWaitTime'].to_i > 0
                                 	valuehash['gitLockWaitTime'] = "#{valuehash['gitLockWaitTime'].to_i}"
                         	else
-                        		valuehash['gitLockWaitTime'] = @@old_valuehash['gitLockWaitTime']
+                        		valuehash['gitLockWaitTime'] = old_valuehash['gitLockWaitTime']
                                 end
                         end
                 	# Save back results
@@ -159,35 +167,35 @@ class GitHostingSettingsObserver < ActiveRecord::Observer
                         	Setting.check_cache
                         end
 
-			if @@old_valuehash['gitScriptDir'] != valuehash['gitScriptDir'] ||
-                           @@old_valuehash['gitUser'] != valuehash['gitUser'] ||
-                           @@old_valuehash['gitoliteIdentityFile'] != valuehash['gitoliteIdentityFile'] ||
-                           @@old_valuehash['gitoliteIdentityPublicKeyFile'] != valuehash['gitoliteIdentityPublicKeyFile']
+			if old_valuehash['gitScriptDir'] != valuehash['gitScriptDir'] ||
+                           old_valuehash['gitUser'] != valuehash['gitUser'] ||
+                           old_valuehash['gitoliteIdentityFile'] != valuehash['gitoliteIdentityFile'] ||
+                           old_valuehash['gitoliteIdentityPublicKeyFile'] != valuehash['gitoliteIdentityPublicKeyFile']
                         	# Need to update scripts
                         	GitHosting.update_git_exec
                         end
 
-			if @@old_valuehash['gitRepositoryBasePath'] != valuehash['gitRepositoryBasePath'] ||
-                           @@old_valuehash['gitRedmineSubdir'] != valuehash['gitRedmineSubdir'] ||
-                           @@old_valuehash['gitRepositoryHierarchy'] != valuehash['gitRepositoryHierarchy'] ||
-                           @@old_valuehash['gitUser'] != valuehash['gitUser']
+			if old_valuehash['gitRepositoryBasePath'] != valuehash['gitRepositoryBasePath'] ||
+                           old_valuehash['gitRedmineSubdir'] != valuehash['gitRedmineSubdir'] ||
+                           old_valuehash['gitRepositoryHierarchy'] != valuehash['gitRepositoryHierarchy'] ||
+                           old_valuehash['gitUser'] != valuehash['gitUser']
                         	# Need to update everyone!
 				GitHostingObserver.bracketed_update_repositories(:resync_all)
 			end
 
-			if @@old_valuehash['gitUser'] != valuehash['gitUser']
+			if old_valuehash['gitUser'] != valuehash['gitUser']
 
 				GitHosting.setup_hooks
 
-			elsif @@old_valuehash['httpServer'] !=  valuehash['httpServer'] || 
-                              @@old_valuehash['gitHooksDebug'] != valuehash['gitHooksDebug'] || 
-                              @@old_valuehash['gitRedmineSubdir'] != valuehash['gitRedmineSubdir'] ||
-                              @@old_valuehash['gitRepositoryHierarchy'] != valuehash['gitRepositoryHierarchy'] ||
-                              @@old_valuehash['gitHooksAreAsynchronous'] != valuehash['gitHooksAreAsynchronous']
+			elsif old_valuehash['httpServer'] !=  valuehash['httpServer'] || 
+                              old_valuehash['gitHooksDebug'] != valuehash['gitHooksDebug'] || 
+                              old_valuehash['gitRedmineSubdir'] != valuehash['gitRedmineSubdir'] ||
+                              old_valuehash['gitRepositoryHierarchy'] != valuehash['gitRepositoryHierarchy'] ||
+                              old_valuehash['gitHooksAreAsynchronous'] != valuehash['gitHooksAreAsynchronous']
 
 				GitHosting.update_global_hook_params
 			end
-                  	@@old_valuehash = valuehash.clone
+                  	old_valuehash = valuehash.clone
 		end
 	end
 end

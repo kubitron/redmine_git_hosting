@@ -1,8 +1,11 @@
 def install_redmine_git_hosting_routes(map)
 	# URL for items of type httpServer/XXX.git.  Some versions of rails has problems with multiple regex expressions, so avoid...
   	# Note that 'http_server_subdir' is either empty (default case) or ends in '/'.
-	map.connect ":project_path/*path", 
-  		:prefix => Setting.plugin_redmine_git_hosting['httpServerSubdir'], :project_path => /([^\/]+\/)*?[^\/]+\.git/, :controller => 'git_http'
+  begin
+		map.connect ":project_path/*path", 
+			:prefix => Setting.plugin_redmine_git_hosting['httpServerSubdir'], :project_path => /([^\/]+\/)*?[^\/]+\.git/, :controller => 'git_http'
+	rescue
+	end
 
 	# Handle the public keys plugin to my/account.
 	map.resources :public_keys, :controller => 'gitolite_public_keys', :path_prefix => 'my'
