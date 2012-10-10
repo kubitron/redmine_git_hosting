@@ -62,12 +62,17 @@ class GitoliteHooksController < ApplicationController
 		output.write msg
 		output.flush
 		uri = URI(prurl.url)
+		http = Net::HTTP.new(uri.host, uri.port)
+		http.use_ssl = (uri.scheme == 'https')
+		path = uri.path != "" ? uri.path : '/'
 		payloads.each {|payload|
 		    if prurl.mode == :github
-			res = Net::HTTP.post_form(uri, {"payload" => payload.to_json})
+			request = Net::HTTP::Post.new("#{path}?#{uri.query}")
+			request.set_form_data({"payload" => payload.to_json})
 		    else
-			res = Net::HTTP.get_response(uri)
+			request = Net::HTTP::Get.new("#{path}?#{uri.query}")
 		    end
+		    res = http.start {|http| http.request(request) }
 		    output.write res.is_a?(Net::HTTPSuccess) ? "[success] " : "[failure] "
 		    output.flush
 		}
