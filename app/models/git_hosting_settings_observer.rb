@@ -1,7 +1,9 @@
 class GitHostingSettingsObserver < ActiveRecord::Observer
     observe :setting
 
-    @@old_valuehash = (Setting.plugin_redmine_git_hosting).clone
+    def init_old_value
+    	@@old_valuehash ||= (Setting.plugin_redmine_git_hosting).clone
+    end
 
     def reload_this_observer
 	observed_classes.each do |klass|
@@ -15,6 +17,8 @@ class GitHostingSettingsObserver < ActiveRecord::Observer
     # Thus, we can only silently refuse to perform bad changes and/or perform
     # slight corrections to badly formatted values.
     def before_save(object)
+    	init_old_value
+
 	# Only validate settings for our plugin
 	if object.name == "plugin_redmine_git_hosting"
 	    valuehash = object.value
@@ -174,6 +178,8 @@ class GitHostingSettingsObserver < ActiveRecord::Observer
     end
 
     def after_save(object)
+    	init_old_value
+    	
 	# Only perform after-actions on settings for our plugin
 	if object.name == "plugin_redmine_git_hosting"
 	    valuehash = object.value
