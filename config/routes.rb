@@ -3,7 +3,7 @@ def install_redmine_git_hosting_routes(map)
     # Note that 'http_server_subdir' is either empty (default case) or ends in '/'.
     begin
 	    prefix = Setting.plugin_redmine_git_hosting['httpServerSubdir']
-	rescue ActiveRecord::StatementInvalid
+	rescue
 		prefix = ''
 	end
     map.connect ":repo_path/*path",
