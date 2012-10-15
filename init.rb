@@ -90,7 +90,7 @@ Redmine::Scm::Base.all.unshift("Git").uniq!
 
 # initialize observer
 config.after_initialize do
-    if config.action_controller.perform_caching
+    if config.action_controller.perform_caching && !(File.basename($0) == "rake" && ARGV.include?("db:migrate"))
 	ActiveRecord::Base.observers = ActiveRecord::Base.observers << GitHostingObserver
 	ActiveRecord::Base.observers = ActiveRecord::Base.observers << GitHostingSettingsObserver
 
