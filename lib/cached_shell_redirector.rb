@@ -104,7 +104,7 @@ class CachedShellRedirector
     # Ruby 1.8 define_method doesn't work with blocks.
     def method_missing(my_method, *args, &block)
 	# Only handle IO methods!
-	if IO.instance_methods.index(my_method.to_sym).nil?
+	unless IO.instance_methods.map { |m| m.to_s }.include? my_method.to_s
 	    return super(my_method, *args, &block)
 	end
 
