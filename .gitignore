@@ -1,3 +1,14 @@
 .*.swp
-bin/
-selinux/tmp/
+/bin
+/selinux/tmp
+
+/app/views/repository_post_receive_urls
+/app/views/repository_mirrors
+/app/views/repository_git_notifications
+/app/views/repository_deployment_credentials
+/app/views/repositories/edit.html.erb
+/app/views/repositories/_javascript_headers.html.erb
+/app/views/projects/settings/_repositories.html.erb
+/app/views/gitolite_public_keys/_view.html.erb
+/app/views/settings/_redmine_git_hosting.html.erb
+/app/views/settings/_gitolite_config_notify.html.erb
